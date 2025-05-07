@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AptYonetim - Apartman Yönetim Uygulaması
 
-## Getting Started
+Modern bir apartman yönetim uygulaması. Sakinler, yöneticiler ve admin için farklı yetkilerle borç/ödeme takibi, duyurular, anketler ve daha fazlası.
 
-First, run the development server:
+## Özellikler
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- 🏢 Apartman ve daire yönetimi
+- 💰 Aidat ve ödeme takibi
+- 📣 Duyuru sistemi
+- 📊 Anket oluşturma ve katılım
+- 📝 Gider/harcama yönetimi ve kayıt
+- 📄 Doküman paylaşımı
+- 💳 Kredi kartı ile online ödeme
+- 📱 Mobil uyumlu tasarım
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Teknoloji Yığını
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js, TypeScript, TailwindCSS, React
+- **Backend**: Next.js API Routes
+- **Veritabanı**: PostgreSQL, Prisma ORM
+- **Kimlik Doğrulama**: NextAuth.js
+- **Ödeme**: Stripe
+- **Deployment**: Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Kurulum
 
-## Learn More
+### Gereksinimler
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js (v18 veya üzeri)
+- PostgreSQL
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Adımlar
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Repoyu klonlayın
+   ```
+   git clone https://github.com/kullanici/aptyonetim.git
+   cd aptyonetim
+   ```
 
-## Deploy on Vercel
+2. Bağımlılıkları yükleyin
+   ```
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. `.env` dosyasını oluşturun
+   ```
+   # Database
+   DATABASE_URL="postgresql://postgres:password@localhost:5432/aptyonetim"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   # Next Auth
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET="your-secret-key-change-in-production"
+
+   # Stripe
+   STRIPE_SECRET_KEY="your-stripe-secret-key"
+   STRIPE_WEBHOOK_SECRET="your-stripe-webhook-secret"
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="your-stripe-publishable-key"
+   ```
+
+4. Veritabanını oluşturun
+   ```
+   npx prisma migrate dev --name init
+   ```
+
+5. Geliştirme sunucusunu başlatın
+   ```
+   npm run dev
+   ```
+
+6. Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın
+
+## Kullanıcı Rolleri
+
+- **Sakin**: Aidat görüntüleme ve ödeme, duyuruları görüntüleme, anketlere katılma
+- **Yönetici**: Sakin yetkileri + Harcama ekleme, duyuru oluşturma, anket oluşturma
+- **Admin**: Tüm yetkiler + Apartman ve kullanıcı yönetimi
+
+## Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.
