@@ -2,15 +2,16 @@ import { AuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Basitleştirilmiş authOptions - veritabanı bağlantısı olmadan çalışacak şekilde
-export const authOptions: AuthOptions = {
+// authOptions const olarak tanımla ama export etme
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        apartmentCode: { label: "Apartman Kodu", type: "text" },
-        unitNumber: { label: "Daire Numarası", type: "text" },
-        password: { label: "Şifre", type: "password" },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+        apartmentCode: { label: "Apartment Code", type: "text" },
+        unitNumber: { label: "Unit Number", type: "text" },
       },
       async authorize(credentials) {
         // Demo amaçlı sabit kullanıcı - gerçek uygulamada veritabanından kontrol edilmelidir
@@ -21,6 +22,7 @@ export const authOptions: AuthOptions = {
           return {
             id: "1",
             name: "Demo Kullanıcı",
+            email: "demo@example.com",
             role: "RESIDENT",
           };
         }
@@ -33,6 +35,7 @@ export const authOptions: AuthOptions = {
           return {
             id: "2",
             name: "Demo Yönetici",
+            email: "admin@example.com",
             role: "ADMIN",
           };
         }
@@ -70,6 +73,7 @@ export const authOptions: AuthOptions = {
   debug: process.env.NODE_ENV === "development",
 };
 
+// Sadece handler'ı export et
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST }; 

@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { 
   LuInfo, LuDollarSign, LuUsers, LuCalendarClock, 
-  LuArrowDown, LuArrowUp, LuBuildingCommunity
+  LuArrowDown, LuArrowUp, LuBuilding
 } from "react-icons/lu";
 import { MdOutlineAnnouncement } from "react-icons/md";
 import Link from "next/link";
@@ -122,7 +122,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gösterge Paneli</h1>
         <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
-          <LuBuildingCommunity className="h-5 w-5" />
+          <LuBuilding className="h-5 w-5" />
           <span>Akasya Apartmanı</span>
         </div>
       </div>
