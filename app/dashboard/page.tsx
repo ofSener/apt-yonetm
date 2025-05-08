@@ -1,318 +1,466 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { 
-  LuInfo, LuDollarSign, LuUsers, LuCalendarClock, 
-  LuArrowDown, LuArrowUp, LuBuilding
-} from "react-icons/lu";
-import { MdOutlineAnnouncement } from "react-icons/md";
+import { useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { 
+  LuBell, 
+  LuCreditCard, 
+  LuClipboardList, 
+  LuUsers,
+  LuFileText,
+  LuChevronRight,
+  LuMessageSquare,
+  LuTriangle,
+  LuCheck,
+  LuCalendar
+} from "react-icons/lu";
 
-interface DashboardMetric {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ElementType;
-  change?: {
-    value: number;
-    type: "increase" | "decrease";
-  };
-}
+// Örnek veri
+const mockAnnouncements = [
+  {
+    id: "1",
+    title: "Su Kesintisi Hakkında",
+    content: "Yarın 10:00-14:00 saatleri arasında bakım çalışması nedeniyle su kesintisi yaşanacaktır.",
+    date: "2023-06-15",
+    isImportant: true,
+    isActive: true,
+  },
+  {
+    id: "2",
+    title: "Aylık Aidat Ödemeleri",
+    content: "Haziran ayı aidat ödemelerini lütfen ay sonuna kadar tamamlayınız.",
+    date: "2023-06-10",
+    isImportant: true,
+    isActive: true,
+  }
+];
+
+const mockPayments = [
+  {
+    id: "1",
+    description: "Haziran 2023 Aidatı",
+    amount: 550,
+    dueDate: "2023-06-15",
+    isPaid: false
+  },
+  {
+    id: "2",
+    description: "Mayıs 2023 Aidatı",
+    amount: 550,
+    dueDate: "2023-05-15",
+    isPaid: true,
+    paymentDate: "2023-05-10"
+  }
+];
+
+const mockRequests = [
+  {
+    id: "1",
+    title: "Su Tesisatı Arızası",
+    status: "completed", // pending, inProgress, completed, rejected
+    createdAt: "2023-06-10T14:30:00",
+    updatedAt: "2023-06-12T09:15:00"
+  },
+  {
+    id: "2",
+    title: "Elektrik Arızası",
+    status: "inProgress",
+    createdAt: "2023-06-15T08:45:00",
+    updatedAt: "2023-06-15T11:20:00"
+  }
+];
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [metrics, setMetrics] = useState<DashboardMetric[]>([]);
-  const [recentAnnouncements, setRecentAnnouncements] = useState<any[]>([]);
-  const [upcomingDues, setUpcomingDues] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const userName = (session?.user as any)?.name || "Daire Sakini";
+  const userUnit = (session?.user as any)?.unitNumber || "5";
 
-  useEffect(() => {
-    // In a real application, this would fetch data from an API
-    setTimeout(() => {
-      setMetrics([
-        {
-          title: "Apartman Kasası",
-          value: "15.420 ₺",
-          description: "Toplam bakiye",
-          icon: LuDollarSign,
-          change: {
-            value: 12,
-            type: "increase",
-          },
-        },
-        {
-          title: "Toplam Sakin",
-          value: 28,
-          description: "Tüm dairelerde",
-          icon: LuUsers,
-        },
-        {
-          title: "Aktif Anketler",
-          value: 2,
-          description: "Katılım bekliyor",
-          icon: LuCalendarClock,
-        },
-        {
-          title: "Daire Borcu",
-          value: session?.user?.role === "RESIDENT" ? "320 ₺" : "3.240 ₺",
-          description: session?.user?.role === "RESIDENT" ? "Ödeme bekleniyor" : "Toplam tahsilat bekleyen",
-          icon: LuInfo,
-          change: {
-            value: 5,
-            type: "decrease",
-          },
-        },
-      ]);
+  // Bugünün tarihini al
+  const today = new Date();
+  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(today);
 
-      setRecentAnnouncements([
-        {
-          id: "1",
-          title: "Asansör Bakımı Hakkında",
-          content: "Önümüzdeki pazartesi (10 Mayıs) asansör bakımı yapılacaktır. Saat 10:00-14:00 arası asansör kullanılamayacaktır.",
-          createdAt: "2023-05-05T14:30:00Z",
-          createdBy: {
-            name: "Ahmet Yılmaz",
-            role: "MANAGER",
-          },
-        },
-        {
-          id: "2",
-          title: "Su Kesintisi Bildirimi",
-          content: "Yarın (6 Mayıs) saat 09:00-13:00 arası apartmanımızda su kesintisi olacaktır. Lütfen hazırlıklı olun.",
-          createdAt: "2023-05-05T10:15:00Z",
-          createdBy: {
-            name: "Ahmet Yılmaz",
-            role: "MANAGER",
-          },
-        },
-      ]);
+  // Ödenmemiş aidat sayısı
+  const unpaidDues = mockPayments.filter(payment => !payment.isPaid).length;
+  
+  // Bekleyen talep sayısı
+  const pendingRequests = mockRequests.filter(request => 
+    request.status === "pending" || request.status === "inProgress"
+  ).length;
 
-      setUpcomingDues([
-        {
-          id: "1",
-          amount: 320,
-          description: "Mayıs 2023 Aidatı",
-          dueDate: "2023-05-15T00:00:00Z",
-          isPaid: false,
-        },
-        {
-          id: "2",
-          amount: 150,
-          description: "Otopark Ücreti",
-          dueDate: "2023-05-20T00:00:00Z",
-          isPaid: false,
-        },
-      ]);
-
-      setLoading(false);
-    }, 1000);
-  }, [session?.user?.role]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  // Son duyurular
+  const latestAnnouncements = mockAnnouncements
+    .filter(announcement => announcement.isActive)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gösterge Paneli</h1>
-        <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
-          <LuBuilding className="h-5 w-5" />
-          <span>Akasya Apartmanı</span>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Merhaba, {userName}</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          {formattedDate} - Daire {userUnit}
+        </p>
+      </div>
+
+      {/* Ana İstatistikler */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ödenmemiş Aidat</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {unpaidDues > 0 ? unpaidDues : "Yok"}
+              </p>
+            </div>
+            <div className={`p-3 rounded-full ${unpaidDues > 0 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'}`}>
+              <LuCreditCard className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Link 
+              href="/dashboard/payments" 
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+            >
+              Aidat ödemelerine git <LuChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Bakım Talepleri</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {pendingRequests > 0 ? pendingRequests : "Yok"}
+              </p>
+            </div>
+            <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+              <LuClipboardList className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Link 
+              href="/dashboard/maintenance" 
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+            >
+              Bakım taleplerine git <LuChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Aktif Duyurular</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                {latestAnnouncements.length}
+              </p>
+            </div>
+            <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
+              <LuBell className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Link 
+              href="/dashboard/announcements" 
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+            >
+              Tüm duyuruları görüntüle <LuChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Apartman Sakinleri</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">24</p>
+            </div>
+            <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+              <LuUsers className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Link 
+              href="/dashboard/residents" 
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+            >
+              Sakinleri görüntüle <LuChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((metric, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-gray-800 overflow-hidden rounded-lg shadow"
-          >
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 rounded-md bg-blue-50 dark:bg-blue-900/30 p-3">
-                  <metric.icon className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      {metric.title}
-                    </dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900 dark:text-white">
-                        {metric.value}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700/50 px-5 py-3">
-              <div className="text-sm">
-                <span className="font-medium text-gray-500 dark:text-gray-400">
-                  {metric.description}
-                </span>
-                {metric.change && (
-                  <span
-                    className={`ml-2 ${
-                      metric.change.type === "increase"
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {metric.change.type === "increase" ? <LuArrowUp className="inline h-4 w-4" /> : <LuArrowDown className="inline h-4 w-4" />}
-                    {metric.change.value}%
-                  </span>
-                )}
-              </div>
-            </div>
+      {/* İkinci Satır */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Son Duyurular */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md md:col-span-2">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Son Duyurular</h2>
           </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Announcements */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Son Duyurular</h2>
-              <Link
-                href="/dashboard/announcements"
-                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
-              >
-                Tümünü Gör
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {recentAnnouncements.map((announcement) => (
-                <div
-                  key={announcement.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                >
-                  <div className="flex items-start">
-                    <div className="shrink-0 mt-1">
-                      <MdOutlineAnnouncement className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">{announcement.title}</h3>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{announcement.content}</p>
-                      <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-                        <span>{announcement.createdBy.name}</span>
-                        <span className="mx-1">•</span>
-                        <span>{new Date(announcement.createdAt).toLocaleDateString("tr-TR")}</span>
+            {latestAnnouncements.length > 0 ? (
+              <div className="space-y-4">
+                {latestAnnouncements.map((announcement) => (
+                  <div key={announcement.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 pb-4 last:pb-0">
+                    <div className="flex items-start">
+                      {announcement.isImportant ? (
+                        <LuTriangle className="w-5 h-5 text-red-500 dark:text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <LuBell className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <Link 
+                          href={`/dashboard/announcements/${announcement.id}`}
+                          className="text-base font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          {announcement.title}
+                        </Link>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          {announcement.content.length > 100 
+                            ? `${announcement.content.substring(0, 100)}...` 
+                            : announcement.content}
+                        </p>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(announcement.date).toLocaleDateString('tr-TR')}
+                          </span>
+                          <Link 
+                            href={`/dashboard/announcements/${announcement.id}`}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Detayları gör
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">Aktif duyuru bulunmamaktadır.</p>
+            )}
+            <div className="mt-4 text-right">
+              <Link 
+                href="/dashboard/announcements"
+                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Tüm duyuruları görüntüle <LuChevronRight className="w-4 h-4 ml-1" />
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Upcoming Dues */}
-        {session?.user?.role === "RESIDENT" && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Yaklaşan Ödemeler</h2>
-                <Link
-                  href="/dashboard/payments"
-                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
-                >
-                  Tümünü Gör
-                </Link>
-              </div>
+        {/* Hızlı Erişim */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Hızlı Erişim</h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-3">
+              <Link 
+                href="/dashboard/payments/new" 
+                className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <div className="w-10 h-10 mr-3 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                  <LuCreditCard className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">Aidat Öde</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">Kredi kartı veya havale</span>
+                </div>
+              </Link>
+              
+              <Link 
+                href="/dashboard/maintenance/create" 
+                className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <div className="w-10 h-10 mr-3 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <LuClipboardList className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">Arıza Bildir</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">Bakım veya tamir talebi</span>
+                </div>
+              </Link>
+              
+              <Link 
+                href="/dashboard/documents" 
+                className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <div className="w-10 h-10 mr-3 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                  <LuFileText className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">Belgeler</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">Yönetim planı ve kararlar</span>
+                </div>
+              </Link>
+              
+              <Link 
+                href="/dashboard/message" 
+                className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <div className="w-10 h-10 mr-3 flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
+                  <LuMessageSquare className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">Yöneticiye Mesaj</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">Soru veya önerileriniz</span>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Üçüncü Satır */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Ödeme Durumu */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ödeme Durumu</h2>
+          </div>
+          <div className="p-6">
+            {mockPayments.length > 0 ? (
               <div className="space-y-4">
-                {upcomingDues.map((due) => (
-                  <div
-                    key={due.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
+                {mockPayments.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between">
+                    <div className="flex items-start">
+                      <div className={`mr-3 flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${
+                        payment.isPaid 
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                      }`}>
+                        {payment.isPaid ? (
+                          <LuCheck className="w-5 h-5" />
+                        ) : (
+                          <LuCreditCard className="w-5 h-5" />
+                        )}
+                      </div>
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">{due.description}</h3>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          Son Ödeme: {new Date(due.dueDate).toLocaleDateString("tr-TR")}
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{payment.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {payment.isPaid 
+                            ? `Ödendi: ${new Date(payment.paymentDate!).toLocaleDateString('tr-TR')}` 
+                            : `Son Ödeme: ${new Date(payment.dueDate).toLocaleDateString('tr-TR')}`}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{due.amount} ₺</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className={`text-sm font-medium ${
+                        payment.isPaid 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {payment.amount.toLocaleString('tr-TR')} ₺
+                      </span>
+                      {!payment.isPaid && (
                         <Link
-                          href={`/dashboard/payments/${due.id}`}
-                          className="mt-2 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                          href={`/dashboard/payments/${payment.id}`}
+                          className="ml-4 px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                         >
                           Öde
                         </Link>
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">Ödeme bilgisi bulunmamaktadır.</p>
+            )}
+            <div className="mt-4 text-right">
+              <Link 
+                href="/dashboard/payments"
+                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Tüm ödemeleri görüntüle <LuChevronRight className="w-4 h-4 ml-1" />
+              </Link>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Recent Expenses for Managers and Admins */}
-        {(session?.user?.role === "MANAGER" || session?.user?.role === "ADMIN") && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Son Harcamalar</h2>
-                <Link
-                  href="/dashboard/expenses"
-                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
-                >
-                  Tümünü Gör
-                </Link>
-              </div>
+        {/* Bakım Talepleri */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bakım Taleplerim</h2>
+          </div>
+          <div className="p-6">
+            {mockRequests.length > 0 ? (
               <div className="space-y-4">
-                {[
-                  {
-                    id: "1",
-                    amount: 750,
-                    description: "Apartman Temizliği",
-                    expenseDate: "2023-05-01T00:00:00Z",
-                    createdBy: {
-                      name: "Ahmet Yılmaz",
-                    },
-                  },
-                  {
-                    id: "2",
-                    amount: 320,
-                    description: "Bahçe Bakımı",
-                    expenseDate: "2023-04-28T00:00:00Z",
-                    createdBy: {
-                      name: "Ahmet Yılmaz",
-                    },
-                  },
-                ].map((expense) => (
-                  <div
-                    key={expense.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">{expense.description}</h3>
-                        <div className="mt-1 flex items-center text-xs text-gray-500 dark:text-gray-400">
-                          <span>{expense.createdBy.name}</span>
-                          <span className="mx-1">•</span>
-                          <span>{new Date(expense.expenseDate).toLocaleDateString("tr-TR")}</span>
+                {mockRequests.map((request) => {
+                  // Durum bilgisi
+                  let statusInfo = {
+                    color: "text-gray-600 dark:text-gray-400",
+                    bgColor: "bg-gray-100 dark:bg-gray-700",
+                    icon: <LuClipboardList className="w-4 h-4 mr-1" />,
+                    text: "Bekliyor"
+                  };
+                  
+                  if (request.status === "completed") {
+                    statusInfo = {
+                      color: "text-green-600 dark:text-green-400",
+                      bgColor: "bg-green-100 dark:bg-green-900/30",
+                      icon: <LuCheck className="w-4 h-4 mr-1" />,
+                      text: "Tamamlandı"
+                    };
+                  } else if (request.status === "inProgress") {
+                    statusInfo = {
+                      color: "text-blue-600 dark:text-blue-400",
+                      bgColor: "bg-blue-100 dark:bg-blue-900/30",
+                      icon: <LuClipboardList className="w-4 h-4 mr-1" />,
+                      text: "İşleme Alındı"
+                    };
+                  }
+                  
+                  return (
+                    <div key={request.id} className="flex items-center justify-between">
+                      <div className="flex items-start">
+                        <div className={`mr-3 flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${statusInfo.bgColor} ${statusInfo.color}`}>
+                          {statusInfo.icon}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{request.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Oluşturulma: {new Date(request.createdAt).toLocaleDateString('tr-TR')}
+                          </p>
                         </div>
                       </div>
-                      <span className="text-lg font-semibold text-red-600 dark:text-red-400">-{expense.amount} ₺</span>
+                      <div className="flex items-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.color}`}>
+                          {statusInfo.text}
+                        </span>
+                        <Link
+                          href={`/dashboard/maintenance/${request.id}`}
+                          className="ml-4 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                        >
+                          <LuChevronRight className="w-5 h-5" />
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">Bakım talebi bulunmamaktadır.</p>
+            )}
+            <div className="mt-4 text-right">
+              <Link 
+                href="/dashboard/maintenance"
+                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Tüm talepleri görüntüle <LuChevronRight className="w-4 h-4 ml-1" />
+              </Link>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -101,15 +101,18 @@ export default function LoginPage() {
             
             <div>
               <label htmlFor="unitNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Daire Numarası <span className="text-gray-500 dark:text-gray-400">(Sadece daire sakinleri için)</span>
+                Daire Numarası
               </label>
               <input
                 id="unitNumber"
                 type="text"
-                {...register("unitNumber")}
+                {...register("unitNumber", { required: "Daire numarası gereklidir" })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white"
-                placeholder="Daire numaranızı girin (opsiyonel)"
+                placeholder="Daire numaranızı girin"
               />
+              {errors.unitNumber && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.unitNumber.message}</p>
+              )}
             </div>
             
             <div>

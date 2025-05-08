@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
         redirect: false,
         apartmentCode: data.apartmentCode,
         password: data.password,
-        isAdmin: true, // Admin girişi olduğunu belirten özel alan
+        isAdmin: 'true', // Admin girişi olduğunu belirten özel alan - string olarak
       });
 
       if (result?.error) {

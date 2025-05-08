@@ -237,6 +237,73 @@ exports.Prisma.DocumentScalarFieldEnum = {
   apartmentId: 'apartmentId'
 };
 
+exports.Prisma.MaintenanceRequestScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  status: 'status',
+  priority: 'priority',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  completedAt: 'completedAt',
+  unitId: 'unitId',
+  createdById: 'createdById',
+  assignedToId: 'assignedToId'
+};
+
+exports.Prisma.MaintenanceCommentScalarFieldEnum = {
+  id: 'id',
+  content: 'content',
+  createdAt: 'createdAt',
+  requestId: 'requestId',
+  authorId: 'authorId'
+};
+
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  isRead: 'isRead',
+  entityId: 'entityId',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BankAccountScalarFieldEnum = {
+  id: 'id',
+  bankName: 'bankName',
+  accountName: 'accountName',
+  iban: 'iban',
+  accountNumber: 'accountNumber',
+  branch: 'branch',
+  description: 'description',
+  isActive: 'isActive',
+  apartmentId: 'apartmentId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BankTransferScalarFieldEnum = {
+  id: 'id',
+  amount: 'amount',
+  transferDate: 'transferDate',
+  referenceCode: 'referenceCode',
+  senderName: 'senderName',
+  description: 'description',
+  receiptUrl: 'receiptUrl',
+  status: 'status',
+  statusNote: 'statusNote',
+  bankAccountId: 'bankAccountId',
+  userId: 'userId',
+  dueId: 'dueId',
+  verifiedById: 'verifiedById',
+  verifiedAt: 'verifiedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -254,7 +321,28 @@ exports.Prisma.NullsOrder = {
 exports.Role = exports.$Enums.Role = {
   ADMIN: 'ADMIN',
   MANAGER: 'MANAGER',
-  RESIDENT: 'RESIDENT'
+  RESIDENT: 'RESIDENT',
+  SUPER_ADMIN: 'SUPER_ADMIN'
+};
+
+exports.MaintenanceStatus = exports.$Enums.MaintenanceStatus = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  REJECTED: 'REJECTED'
+};
+
+exports.MaintenancePriority = exports.$Enums.MaintenancePriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH'
+};
+
+exports.BankTransferStatus = exports.$Enums.BankTransferStatus = {
+  PENDING: 'PENDING',
+  VERIFIED: 'VERIFIED',
+  REJECTED: 'REJECTED',
+  COMPLETED: 'COMPLETED'
 };
 
 exports.Prisma.ModelName = {
@@ -268,7 +356,12 @@ exports.Prisma.ModelName = {
   Announcement: 'Announcement',
   Poll: 'Poll',
   PollVote: 'PollVote',
-  Document: 'Document'
+  Document: 'Document',
+  MaintenanceRequest: 'MaintenanceRequest',
+  MaintenanceComment: 'MaintenanceComment',
+  Notification: 'Notification',
+  BankAccount: 'BankAccount',
+  BankTransfer: 'BankTransfer'
 };
 
 /**

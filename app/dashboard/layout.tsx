@@ -4,12 +4,14 @@ import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LuBuilding2, LuLayoutDashboard, LuFileText, LuLogOut } from "react-icons/lu";
+import { LuBuilding2, LuLayoutDashboard, LuFileText, LuLogOut, LuBell } from "react-icons/lu";
 import { MdOutlineAnnouncement, MdOutlinePoll } from "react-icons/md";
 import { FaMoneyBillWave } from "react-icons/fa";
 import { RiUserSettingsLine } from "react-icons/ri";
+import { BsTools } from "react-icons/bs";
 import { signOut } from "next-auth/react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import NotificationDropdown from "@/components/NotificationDropdown";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -39,8 +41,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "Gösterge Paneli", href: "/dashboard", icon: LuLayoutDashboard },
     { name: "Ödemeler", href: "/dashboard/payments", icon: FaMoneyBillWave },
     { name: "Duyurular", href: "/dashboard/announcements", icon: MdOutlineAnnouncement },
+    { name: "Bakım ve Arıza", href: "/dashboard/maintenance", icon: BsTools },
     { name: "Anketler", href: "/dashboard/polls", icon: MdOutlinePoll },
     { name: "Dokümanlar", href: "/dashboard/documents", icon: LuFileText },
+    { name: "Bildirimler", href: "/dashboard/notifications", icon: LuBell },
   ];
 
   const userNavigation = [
@@ -89,7 +93,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
           <nav className="mt-5 flex-1 space-y-1 px-6">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive = 
+                pathname === item.href || 
+                (pathname.startsWith(`${item.href}/`) && item.href !== "/dashboard") || 
+                (item.href === "/dashboard" && pathname === "/dashboard");
               return (
                 <Link
                   key={item.name}
@@ -185,6 +192,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
             </div>
             <div className="flex items-center space-x-4">
+              <NotificationDropdown />
               <ThemeToggle />
               <div className="relative">
                 <div className="flex items-center space-x-3">

@@ -32,12 +32,19 @@ model User {
   polls              Poll[]              @relation("PollCreator")
   pollVotes          PollVote[]
   documents          Document[]
+  maintenanceRequests MaintenanceRequest[] @relation("MaintenanceCreator")
+  assignedMaintenances MaintenanceRequest[] @relation("MaintenanceAssignee")
+  maintenanceComments MaintenanceComment[]
+  notifications      Notification[]
+  bankTransfers      BankTransfer[]      // Kullanıcının yaptığı banka transferleri
+  verifiedTransfers  BankTransfer[]      @relation("BankTransferVerifier") // Onayladığı transferler
 }
 
 enum Role {
   ADMIN
   MANAGER
   RESIDENT
+  SUPER_ADMIN
 }
 
 model Apartment {
@@ -54,6 +61,7 @@ model Apartment {
   polls         Poll[]
   funds         Fund[]
   documents     Document[]
+  bankAccounts  BankAccount[]  // Apartmana ait banka hesapları
 }
 
 model Unit {
@@ -63,9 +71,10 @@ model Unit {
   apartment   Apartment @relation(fields: [apartmentId], references: [id])
   apartmentId String
   residents   User[]
-  dues        Due[]
+  dues         Due[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  maintenanceRequests MaintenanceRequest[]
 
   @@unique([apartmentId, number])
 }
@@ -81,6 +90,7 @@ model Due {
   unit        Unit     @relation(fields: [unitId], references: [id])
   unitId      String
   payment     Payment?
+  bankTransfers BankTransfer[] // Aidat için yapılan banka transferleri
 }
 
 model Payment {
@@ -175,4 +185,115 @@ model Document {
   createdById String
   apartment   Apartment @relation(fields: [apartmentId], references: [id])
   apartmentId String
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model MaintenanceRequest {
+  id          String              @id @default(uuid())
+  title       String
+  description String
+  status      MaintenanceStatus   @default(PENDING)
+  priority    MaintenancePriority @default(MEDIUM)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  completedAt DateTime?
+  unit        Unit                @relation(fields: [unitId], references: [id])
+  unitId      String
+  createdBy   User                @relation("MaintenanceCreator", fields: [createdById], references: [id])
+  createdById String
+  assignedTo  User?               @relation("MaintenanceAssignee", fields: [assignedToId], references: [id])
+  assignedToId String?
+  comments    MaintenanceComment[]
+}
+
+model MaintenanceComment {
+  id          String            @id @default(uuid())
+  content     String
+  createdAt   DateTime          @default(now())
+  request     MaintenanceRequest @relation(fields: [requestId], references: [id])
+  requestId   String
+  author      User              @relation(fields: [authorId], references: [id])
+  authorId    String
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        String   // payment, maintenance, announcement, meeting, document
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  entityId    String?  // ID of the related entity (payment, maintenance, etc.)
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Bank account model for storing apartment's bank accounts
+model BankAccount {
+  id           String         @id @default(uuid())
+  bankName     String
+  accountName  String
+  iban         String
+  accountNumber String?
+  branch       String?
+  description  String?
+  isActive     Boolean        @default(true)
+  apartment    Apartment      @relation(fields: [apartmentId], references: [id])
+  apartmentId  String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  transfers    BankTransfer[]
+}
+
+// Bank transfer status enum
+enum BankTransferStatus {
+  PENDING     // Bildirildi, onay bekliyor
+  VERIFIED    // Kontrol edildi, onaylandı
+  REJECTED    // Reddedildi
+  COMPLETED   // İşlem tamamlandı ve aidata yansıtıldı
+}
+
+// Bank transfer model for tracking wire transfers/EFT
+model BankTransfer {
+  id               String             @id @default(uuid())
+  amount           Float
+  transferDate     DateTime
+  referenceCode    String             // Benzersiz havale referans kodu
+  senderName       String?            // Havaleyi yapan kişi
+  description      String?            // Açıklama
+  receiptUrl       String?            // Dekont URL'i
+  status           BankTransferStatus @default(PENDING)
+  statusNote       String?            // Ret veya onay notu
+  
+  // İlişkiler
+  bankAccount      BankAccount        @relation(fields: [bankAccountId], references: [id])
+  bankAccountId    String
+  user             User               @relation(fields: [userId], references: [id])
+  userId           String
+  due              Due?               @relation(fields: [dueId], references: [id])
+  dueId            String?            // Opsiyonel, belirli bir aidata yapılan ödeme
+  
+  // Onay bilgileri
+  verifiedBy       User?              @relation("BankTransferVerifier", fields: [verifiedById], references: [id])
+  verifiedById     String?
+  verifiedAt       DateTime?
+  
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([referenceCode])
+  @@index([status])
 }
